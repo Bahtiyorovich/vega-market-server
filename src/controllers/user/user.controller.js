@@ -9,28 +9,37 @@ const jwtSecretKey = process.env.JWT_SECRET_KEY || 'default_secret-key';
 const register = async (req, res, next) => {
 	try {
 		const {name, username, email, password} = req.body;
+
 		const existingUser = await User.findOne({ email }).lean(true);
+
 		if (existingUser) {
+
 			res.status(403);
+
 			return res.json(errorFunction(true, "User Already Exists"));
+
 			} else {
 				const hashedPassword = await securePassword(password);
+
 				const newUser = await User.create({
           name,
 					username,
 					email,
 					password: hashedPassword,
 			});
+
 			if (newUser) {
 				res.status(201);
 				// Token generatsiya qilish
 				const token = jwt.sign({ email }, jwtSecretKey);
+
 			// Tokenni cookie ga yozish
 				res.cookie('access_token', token, {
 					httpOnly: true,
 					secure: process.env.NODE_ENV !== 'production', // Faqatgina ishlab chiqarish paytida ishlatiladi
 					maxAge:24 * 60 * 60 * 1000, // 1 kun
 				});
+				
 				return res.json(
 					errorFunction(false, "User Created", {newUser, token})
 				);
